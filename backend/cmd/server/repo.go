@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"unicode"
 	"unicode/utf8"
 
@@ -63,12 +62,11 @@ func (repo *Repo) Get(ctx context.Context, url string) (string, bool) {
 
 const listQuery = `
 		SELECT summary ->> '$.title', url,
-			   (summary ->> '$.ingredients' IS NOT NULL) AND (summary ->> '$.method' IS NOT NULL)
-		FROM recipes WHERE summary != '""' ORDER BY %s DESC LIMIT ?;`
+			   (summary ->> '$.ingredients' IS NOT NULL) AND (summary ->> '$.method' IS NOT NULL)`
 
 // Returns the most recently-accessed recipes
 func (repo *Repo) Recents(ctx context.Context, count int) (recipeList, error) {
-	query := fmt.Sprintf(listQuery, "lastAccess")
+	query := listQuery + `FROM recipes WHERE summary != '""' ORDER BY lastAccess DESC LIMIT ?;`
 	rows, err := repo.db.QueryContext(ctx, query, count)
 	if err != nil {
 		return nil, err
@@ -89,7 +87,7 @@ func (repo *Repo) Recents(ctx context.Context, count int) (recipeList, error) {
 
 // Returns the most frequently-accessed recipes
 func (repo *Repo) Favorites(ctx context.Context, count int) (recipeList, error) {
-	query := fmt.Sprintf(listQuery, "hitCount")
+	query := listQuery + `FROM recipes WHERE summary != '""' ORDER BY hitCount DESC LIMIT ?;`
 	rows, err := repo.db.QueryContext(ctx, query, count)
 	if err != nil {
 		return nil, err
@@ -127,7 +125,8 @@ func (repo *Repo) Search(ctx context.Context, pattern string) (recipeList, error
 	if unicode.IsLetter(lastRune) {
 		pattern += "*"
 	}
-	rows, err := repo.db.QueryContext(ctx, "SELECT summary ->> '$.title', url FROM fts where fts MATCH ? ORDER BY rank", pattern)
+	query := listQuery + `FROM fts WHERE fts MATCH ? ORDER BY rank;`
+	rows, err := repo.db.QueryContext(ctx, query, pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +135,7 @@ func (repo *Repo) Search(ctx context.Context, pattern string) (recipeList, error
 
 	for rows.Next() {
 		var r recipeEntry
-		err := rows.Scan(&r.Title, &r.Url)
+		err := rows.Scan(&r.Title, &r.Url, &r.HasSummary)
 		if err != nil {
 			return nil, err
 		}
