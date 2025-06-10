@@ -46,7 +46,7 @@ func (ctx *Repo) Close() {
 
 // Returns a recipe summary if one exists in the database
 func (repo *Repo) Hit(ctx context.Context, url string) error {
-	_, err := repo.db.Exec("UPDATE recipes SET hitCount = hitCount + 1 WHERE url = ?", url)
+	_, err := repo.db.ExecContext(ctx, "UPDATE recipes SET hitCount = hitCount + 1, lastAccess = datetime('now') WHERE url = ?", url)
 	return err
 }
 
@@ -58,7 +58,6 @@ func (repo *Repo) Get(ctx context.Context, url string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	_, _ = repo.db.Exec("UPDATE recipes SET lastAccess = datetime('now') WHERE url = ?", url)
 	return summary, true
 }
 
