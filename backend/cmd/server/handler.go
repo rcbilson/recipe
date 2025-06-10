@@ -39,6 +39,7 @@ func handler(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc, port in
 	mux.Handle("GET /api/recents", authHandler(fetchRecents(db)))
 	mux.Handle("GET /api/favorites", authHandler(fetchFavorites(db)))
 	mux.Handle("GET /api/search", authHandler(search(db)))
+	mux.Handle("POST /api/hit", authHandler(hit(db)))
 	// bundled assets and static resources
 	mux.Handle("GET /assets/", http.FileServer(http.Dir(frontendPath)))
 	mux.Handle("GET /static/", http.FileServer(http.Dir(frontendPath)))
