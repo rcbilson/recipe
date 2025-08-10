@@ -109,14 +109,15 @@ const MainPage: React.FC = () => {
   }
 
   const recipeLink = <a href={recipeUrl}>{recipeUrl}</a>;
+  const isValidRecipe = recipe && Array.isArray(recipe.ingredients) && Array.isArray(recipe.method)
 
   return (
     <div id="recipeContainer">
       {isError && <div>An error occurred: {error.message}</div>}
       {isPending && <div>We're loading a summary of this recipe, just a moment...</div>}
-      {!isPending && !recipe && <div>We don't have a summary for {recipeLink}. You can see the original by clicking the link.</div>}
+      {!isPending && !isValidRecipe && <div>We don't have a summary for {recipeLink}. You can see the original by clicking the link.</div>}
       {debug && recipe && <pre>{JSON.stringify(recipe, null, 2)}</pre>}
-      {!debug && recipe && 
+      {!debug && isValidRecipe && 
         <div>
           <div id="recipeHeader">
             <div id="titleBox">
