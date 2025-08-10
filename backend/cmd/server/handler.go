@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -165,6 +166,18 @@ func validateRecipe(js *string, html []byte, urlString string, titleHint string)
 	}
 }
 
+func insertRecipe(ctx context.Context, db Repo, user User, summary string, recipe []byte, url string, titleHint string) {
+	validateRecipe(&summary, recipe, url, titleHint)
+	err := db.Insert(ctx, url, summary, user)
+	if err != nil && err.Error() == "malformed JSON" {
+		err = db.Insert(ctx, url, `""`, user)
+		summary = ""
+	}
+	if err != nil {
+		log.Printf("Error inserting into db: %v", err)
+	}
+}
+
 func summarize(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc) AuthHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, user User) {
 		//w.Header().Set("Content-Type", "application/json")
@@ -191,26 +204,23 @@ func summarize(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc) AuthH
 			log.Println("fetching recipe", req.Url)
 			recipe, redirectUrl, err := fetcher(ctx, req.Url)
 			if err != nil {
-				logError(w, fmt.Sprintf("Error retrieving recipe: %v", err), http.StatusBadRequest)
+				log.Printf("Error retrieving recipe: %v", err)
+				insertRecipe(ctx, db, user, summary, recipe, req.Url, req.TitleHint)
 			} else {
-				var stats llm.Usage
-				summary, err = summarizer(ctx, recipe, &stats)
-				if err != nil {
-					logError(w, fmt.Sprintf("Error communicating with llm: %v", err), http.StatusInternalServerError)
+				summary, ok = db.Get(ctx, redirectUrl)
+				if !ok {
+					var stats llm.Usage
+					summary, err = summarizer(ctx, recipe, &stats)
+					if err != nil {
+						logError(w, fmt.Sprintf("Error communicating with llm: %v", err), http.StatusInternalServerError)
+                                                return
+					}
+					err = db.Usage(ctx, Usage{redirectUrl, len(recipe), len(summary), stats.InputTokens, stats.OutputTokens})
+					if err != nil {
+						log.Printf("Error updating usage: %v", err)
+					}
+					insertRecipe(ctx, db, user, summary, recipe, redirectUrl, req.TitleHint)
 				}
-				err = db.Usage(ctx, Usage{redirectUrl, len(recipe), len(summary), stats.InputTokens, stats.OutputTokens})
-				if err != nil {
-					log.Printf("Error updating usage: %v", err)
-				}
-			}
-			validateRecipe(&summary, recipe, redirectUrl, req.TitleHint)
-			err = db.Insert(ctx, redirectUrl, summary, user)
-			if err != nil && err.Error() == "malformed JSON" {
-				err = db.Insert(ctx, redirectUrl, `""`, user)
-				summary = ""
-			}
-			if err != nil {
-				log.Printf("Error inserting into db: %v", err)
 			}
 		}
 
