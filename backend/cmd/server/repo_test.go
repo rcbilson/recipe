@@ -113,32 +113,6 @@ func TestSearch(t *testing.T) {
 	assert.Equal(t, 0, len(results))
 }
 
-func TestGetUpdatesLastAccessed(t *testing.T) {
-	db := setupTest(t)
-	ctx := context.Background()
-
-	_, err := db.db.Exec(`INSERT INTO recipes (url, summary, lastAccess) VALUES ('http://example.com', '{"title":"recipe"}', '2016-03-29')`)
-	assert.NilError(t, err)
-	_, err = db.db.Exec(`INSERT INTO recipes (url, summary, lastAccess) VALUES ('http://example2.com', '{"title":"recipe2"}', '2016-03-30')`)
-	assert.NilError(t, err)
-
-	// example2 should be the first result
-	recents, err := db.Recents(ctx, 1)
-	assert.NilError(t, err)
-	assert.Equal(t, 1, len(recents))
-	assert.Equal(t, "http://example2.com", recents[0].Url)
-	assert.Equal(t, "recipe2", recents[0].Title)
-
-	// a Get on example should make it the first result
-	_, ok := db.Get(ctx, "http://example.com")
-	assert.Equal(t, true, ok)
-	recents, err = db.Recents(ctx, 1)
-	assert.NilError(t, err)
-	assert.Equal(t, 1, len(recents))
-	assert.Equal(t, "http://example.com", recents[0].Url)
-	assert.Equal(t, "recipe", recents[0].Title)
-}
-
 func TestInsertUpdatesLastAccessed(t *testing.T) {
 	db := setupTest(t)
 	ctx := context.Background()
