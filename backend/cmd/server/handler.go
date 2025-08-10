@@ -189,7 +189,7 @@ func summarize(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc) AuthH
 		summary, ok := db.Get(ctx, req.Url)
 		if !ok {
 			log.Println("fetching recipe", req.Url)
-			recipe, err := fetcher(ctx, req.Url)
+			recipe, redirectUrl, err := fetcher(ctx, req.Url)
 			if err != nil {
 				logError(w, fmt.Sprintf("Error retrieving recipe: %v", err), http.StatusBadRequest)
 			} else {
@@ -198,15 +198,15 @@ func summarize(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc) AuthH
 				if err != nil {
 					logError(w, fmt.Sprintf("Error communicating with llm: %v", err), http.StatusInternalServerError)
 				}
-				err = db.Usage(ctx, Usage{req.Url, len(recipe), len(summary), stats.InputTokens, stats.OutputTokens})
+				err = db.Usage(ctx, Usage{redirectUrl, len(recipe), len(summary), stats.InputTokens, stats.OutputTokens})
 				if err != nil {
 					log.Printf("Error updating usage: %v", err)
 				}
 			}
-			validateRecipe(&summary, recipe, req.Url, req.TitleHint)
-			err = db.Insert(ctx, req.Url, summary, user)
+			validateRecipe(&summary, recipe, redirectUrl, req.TitleHint)
+			err = db.Insert(ctx, redirectUrl, summary, user)
 			if err != nil && err.Error() == "malformed JSON" {
-				err = db.Insert(ctx, req.Url, `""`, user)
+				err = db.Insert(ctx, redirectUrl, `""`, user)
 				summary = ""
 			}
 			if err != nil {
