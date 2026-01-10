@@ -10,5 +10,8 @@ export default defineConfig({
       // string shorthand: http://localhost:5173/foo -> http://localhost:4567/foo
       '/api': 'http://localhost:9000',
     },
+    allowedHosts: [
+      'werkzeug.tawny-hen.ts.net',
+    ]
   }, 
 })

@@ -12,12 +12,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \ 
     go build --tags fts5 -o /bin/server ./cmd/server
 
-FROM node:23-bullseye AS build-frontend
+FROM node:25-bullseye AS build-frontend
 WORKDIR /src
 COPY frontend/package.json frontend/yarn.lock .
-RUN yarn config set network-timeout 300000 && yarn install
+npm install
 COPY frontend .
-RUN yarnpkg run build
+RUN npm run build
 
 FROM alpine:latest
 RUN apk update && apk add sqlite curl
