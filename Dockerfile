@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM node:25-bullseye AS build-frontend
 WORKDIR /src
-COPY frontend/package.json frontend/yarn.lock .
+COPY frontend/package.json frontend/package-lock.json .
 RUN npm install
 COPY frontend .
 RUN npm run build
