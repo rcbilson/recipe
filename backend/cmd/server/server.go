@@ -13,7 +13,6 @@ type specification struct {
 	Port         int    `default:"9000"`
 	FrontendPath string `default:"/home/richard/src/recipe/frontend/dist"`
 	DbFile       string `default:"/home/richard/src/recipe/data/recipe.db"`
-	GClientId    string `default:"250293909105-5da8lue96chip31p2q3ueug0bdvve96o.apps.googleusercontent.com"`
 }
 
 var spec specification
@@ -37,5 +36,5 @@ func main() {
 	}
 	defer db.Close()
 
-	handler(summarizer, db, www.FetcherCombined, spec.Port, spec.FrontendPath, spec.GClientId)
+	handler(summarizer, db, www.FetcherCombined, spec.Port, spec.FrontendPath)
 }

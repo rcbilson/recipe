@@ -32,9 +32,9 @@ type httpError struct {
 	Code    int    `json:"code"`
 }
 
-func handler(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc, port int, frontendPath string, gClientId string) {
+func handler(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc, port int, frontendPath string) {
 	mux := http.NewServeMux()
-	authHandler := requireAuth(db, gClientId)
+	authHandler := requireAuth(db)
 	// Handle the api routes in the backend
 	mux.Handle("POST /api/summarize", authHandler(summarize(summarizer, db, fetcher)))
 	mux.Handle("GET /api/recents", authHandler(fetchRecents(db)))

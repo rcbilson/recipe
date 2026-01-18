@@ -1,35 +1,37 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/components/ui/auth-context";
-import { GoogleLogin } from "@react-oauth/google";
-import Cookies from "js-cookie";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { token, setToken } = useContext(AuthContext);
+  const { setToken } = useContext(AuthContext);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const t = Cookies.get("auth_token");
-    if (t) {
-      setToken(t);
-    }
+    // Check if we're authenticated by making a test API call
+    // If not authenticated, OAuth2-Proxy will redirect to login automatically
+    fetch('/api/recents?count=1')
+      .then(response => {
+        if (response.ok) {
+          setToken("authenticated"); // Set a dummy token to indicate authenticated
+          setIsChecking(false);
+        } else if (response.status === 401) {
+          // OAuth2-Proxy will handle the redirect to /oauth2/start
+          window.location.href = '/oauth2/start';
+        } else {
+          setIsChecking(false);
+        }
+      })
+      .catch(() => {
+        setIsChecking(false);
+      });
   }, [setToken]);
 
-  if (!token) {
+  if (isChecking) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40 }}>
-        <h2>Please sign in with Google to continue</h2>
-        <GoogleLogin
-          onSuccess={credentialResponse => {
-            if (credentialResponse.credential) {
-              setToken(credentialResponse.credential);
-              Cookies.set("auth_token", credentialResponse.credential, { sameSite: 'Strict', secure: true, expires: 30 });
-            }
-          }}
-          onError={() => {
-            alert('Login Failed');
-          }}
-        />
+        <h2>Checking authentication...</h2>
       </div>
     );
   }
+
   return <>{children}</>;
 }

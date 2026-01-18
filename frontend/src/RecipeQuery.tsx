@@ -20,15 +20,13 @@ interface Props {
 
 const RecipeQuery: React.FC<Props> = ({queryPath}: Props) => {
   const navigate = useNavigate();
-  const { token, resetAuth } = useContext(AuthContext);
+  const { resetAuth } = useContext(AuthContext);
 
   const fetchQuery = (queryPath: string) => {
     return async () => {
       try {
         console.log("fetching " + queryPath);
-        const response = await axios.get<Array<RecipeEntry>>(queryPath, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const response = await axios.get<Array<RecipeEntry>>(queryPath);
         return response.data;
       } catch (error) {
         if (error instanceof AxiosError && error.response?.status === 401) {
@@ -49,9 +47,7 @@ const RecipeQuery: React.FC<Props> = ({queryPath}: Props) => {
   const handleRecipeClick = (entry: RecipeEntry) => {
     return () => {
       const encodedUrl = encodeURIComponent(entry.url);
-      axios.post("/api/hit?url=" + encodedUrl, null, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      axios.post("/api/hit?url=" + encodedUrl);
       if (entry.hasSummary) {
         navigate("/show/" + encodedUrl);
       } else {

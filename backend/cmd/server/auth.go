@@ -1,13 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
-
-	"google.golang.org/api/idtoken"
 )
 
 type User string
@@ -37,57 +34,43 @@ func checkCookie(db Repo, r *http.Request) (User, *httpError) {
 	return User(email), nil
 }
 
-func checkToken(db Repo, gClientId string, w http.ResponseWriter, r *http.Request) (User, *httpError) {
-	authHeader := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return "", &httpError{"Missing or invalid Authorization header", http.StatusUnauthorized}
+func checkHeader(db Repo, r *http.Request) (User, *httpError) {
+	// OAuth2-Proxy sets this header with the authenticated user's email
+	email := r.Header.Get("X-Auth-Request-Email")
+	if email == "" {
+		return "", &httpError{"No X-Auth-Request-Email header", http.StatusUnauthorized}
 	}
 
-	token := strings.TrimPrefix(authHeader, "Bearer ")
-	payload, err := idtoken.Validate(context.Background(), token, gClientId)
-	if err != nil {
-		return "", &httpError{"Invalid ID token: " + err.Error(), http.StatusUnauthorized}
-	}
-
-	email, ok := payload.Claims["email"].(string)
-	if !ok {
-		return "", &httpError{"No valid email claim", http.StatusUnauthorized}
-	}
-
+	// Ensure user exists in our database
 	nonce := db.GetSession(r.Context(), email)
 	if nonce == "" {
 		return "", &httpError{fmt.Sprintf("No registered user %s", email), http.StatusUnauthorized}
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session",
-		Value:    fmt.Sprintf("%s %s", email, nonce),
-		MaxAge:   2592000, // 30 days
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
-
 	return User(email), nil
 }
 
-func requireAuth(db Repo, gClientId string) func(AuthHandlerFunc) http.HandlerFunc {
+func requireAuth(db Repo) func(AuthHandlerFunc) http.HandlerFunc {
 	return func(next AuthHandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			var err *httpError
 			var user User
-			if user, err = checkCookie(db, r); err == nil {
+
+			// Primary authentication: check OAuth2-Proxy header
+			if user, err = checkHeader(db, r); err == nil {
+				log.Printf("OAuth2-Proxy auth for %s succeeded", user)
 				next(w, r, user)
 				return
 			}
-			log.Printf("No session cookie, check for token: %v", err)
-			if err.Code == http.StatusUnauthorized {
-				if user, err = checkToken(db, gClientId, w, r); err == nil {
-					log.Printf("token auth for %s succeeded", user)
-					next(w, r, user)
-					return
-				}
+
+			// Fallback: check session cookie (for backwards compatibility)
+			log.Printf("No OAuth2-Proxy header, checking cookie: %v", err)
+			if user, err = checkCookie(db, r); err == nil {
+				log.Printf("Cookie auth for %s succeeded", user)
+				next(w, r, user)
+				return
 			}
+
 			logError(w, err.Message, err.Code)
 		}
 	}
