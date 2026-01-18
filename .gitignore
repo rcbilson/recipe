@@ -5,3 +5,4 @@ backend/www/testdata
 frontend/node_modules
 aws
 data/
+.claude/settings.local.json
