@@ -36,9 +36,10 @@ func checkCookie(db Repo, r *http.Request) (User, *httpError) {
 
 func checkHeader(db Repo, r *http.Request) (User, *httpError) {
 	// OAuth2-Proxy sets this header with the authenticated user's email
-	email := r.Header.Get("X-Auth-Request-Email")
+	// (--pass-user-headers sends X-Forwarded-Email)
+	email := r.Header.Get("X-Forwarded-Email")
 	if email == "" {
-		return "", &httpError{"No X-Auth-Request-Email header", http.StatusUnauthorized}
+		return "", &httpError{"No X-Forwarded-Email header", http.StatusUnauthorized}
 	}
 
 	// Ensure user exists in our database
