@@ -1,14 +1,14 @@
 module github.com/rcbilson/recipe
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
-	github.com/aws/aws-sdk-go-v2/service/bedrockruntime v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/bedrockruntime v1.49.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/mattn/go-sqlite3 v1.14.33
-	golang.org/x/net v0.48.0
+	github.com/mattn/go-sqlite3 v1.14.34
+	golang.org/x/net v0.50.0
 	gotest.tools v2.2.0+incompatible
 )
 
