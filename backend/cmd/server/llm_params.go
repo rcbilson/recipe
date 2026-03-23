@@ -33,4 +33,18 @@ Response style and format requirements:
 	Prefill: "{",
 }
 
-var theModel = &Nova_lite
+var Haiku_4_5 = LlmParams{
+	Params: llm.Params{
+		Region:  "ca-central-1",
+		ModelID: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+	},
+	Prompt: `Task:
+The attached html file contains a recipe. Generate a JSON object with the following properties: "title" containing the title of the recipe, "ingredients" containing the ingredients list of the recipe, and "method" containing the steps required to make the recipe.
+
+Response style and format requirements:
+- All responses MUST be in JSON format.
+- Only output JSON, do not include any other text in your response.`,
+	Prefill: "{",
+}
+
+var theModel = &Haiku_4_5
