@@ -43,6 +43,7 @@ export const TimerButton: React.FC<TimerButtonProps> = ({ text, seconds }) => {
   const [state, setState] = useState<State>('idle');
   const [remaining, setRemaining] = useState(seconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const remainingRef = useRef(seconds);
 
   useEffect(() => {
     return () => {
@@ -50,40 +51,37 @@ export const TimerButton: React.FC<TimerButtonProps> = ({ text, seconds }) => {
     };
   }, []);
 
-  const onFinished = () => {
-    setState('done');
-    playChime();
-    toaster.create({
-      title: "Timer done!",
-      description: text,
-      type: "success",
-      duration: 10000,
-      meta: { closable: true },
-    });
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification("Timer done!", { body: text });
-    }
-    setTimeout(() => {
-      setState('idle');
-      setRemaining(seconds);
-    }, 3000);
-  };
-
   const start = () => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+    remainingRef.current = seconds;
     setRemaining(seconds);
     setState('running');
     intervalRef.current = setInterval(() => {
-      setRemaining(prev => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current!);
-          onFinished();
-          return 0;
+      remainingRef.current -= 1;
+      if (remainingRef.current <= 0) {
+        clearInterval(intervalRef.current!);
+        setRemaining(0);
+        setState('done');
+        playChime();
+        toaster.create({
+          title: "Timer done!",
+          description: text,
+          type: "success",
+          duration: 10000,
+          meta: { closable: true },
+        });
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification("Timer done!", { body: text });
         }
-        return prev - 1;
-      });
+        setTimeout(() => {
+          setState('idle');
+          setRemaining(seconds);
+        }, 3000);
+      } else {
+        setRemaining(remainingRef.current);
+      }
     }, 1000);
   };
 
