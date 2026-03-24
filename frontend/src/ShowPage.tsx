@@ -10,6 +10,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { List } from "@chakra-ui/react"
 import { AuthContext } from "@/components/ui/auth-context";
 import { LuShare2 } from "react-icons/lu";
+import { StepWithTimers } from "@/components/StepWithTimers";
 
 // RecipeRequest is a type consisting of the url of a recipe to fetch.
 type RecipeRequest = {
@@ -136,7 +137,7 @@ const MainPage: React.FC = () => {
                 </List.Root>}
               {recipe.method &&
                 <List.Root as="ol" padding="0.5em">{recipe.method.map((step, id) =>
-                  <List.Item key={id}>{step}</List.Item>)}
+                  <List.Item key={id}><StepWithTimers text={step} /></List.Item>)}
                 </List.Root>}
             </div>
           </ErrorBoundary>
