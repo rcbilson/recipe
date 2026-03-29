@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/rcbilson/recipe/llm"
-	"github.com/rcbilson/recipe/www"
+	"github.com/rcbilson/www"
 )
 
 type recipeEntry struct {
