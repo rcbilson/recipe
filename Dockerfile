@@ -13,11 +13,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build --tags fts5 -o /bin/server ./cmd/server
 
 FROM node:25-bullseye AS build-frontend
+RUN corepack enable && corepack prepare yarn@stable --activate
 WORKDIR /src
-COPY frontend/package.json frontend/package-lock.json .
-RUN npm install
+COPY frontend/package.json frontend/yarn.lock .
+RUN yarn install --frozen-lockfile
 COPY frontend .
-RUN npm run build
+RUN yarn run build
 
 FROM alpine:latest
 RUN apk update && apk add sqlite curl
