@@ -12,7 +12,7 @@ const AddPage: React.FC = () => {
         try {
             new URL(url);
             navigate("/show/" + encodeURIComponent(url));
-        } catch (e) {
+        } catch {
             toaster.create({
                 title: "Invalid URL",
                 type: "error",
