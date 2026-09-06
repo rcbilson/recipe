@@ -80,26 +80,27 @@ func (wrapper InvokeModelWrapper) InvokeConverse(ctx context.Context, prompt str
 
 	switch v := output.Output.(type) {
 	case *types.ConverseOutputMemberMessage:
-		ret := fmt.Sprintf("%s: ", v.Value.Role)
+		var ret strings.Builder
+		ret.WriteString(fmt.Sprintf("%s: ", v.Value.Role))
 		for _, block := range v.Value.Content {
 			switch v := block.(type) {
 			case *types.ContentBlockMemberDocument:
-				ret += "(document)"
+				ret.WriteString("(document)")
 
 			case *types.ContentBlockMemberGuardContent:
-				ret += "(blocked)"
+				ret.WriteString("(blocked)")
 
 			case *types.ContentBlockMemberImage:
-				ret += "(image block)"
+				ret.WriteString("(image block)")
 
 			case *types.ContentBlockMemberText:
-				ret += "<" + v.Value + ">"
+				ret.WriteString("<" + v.Value + ">")
 
 			case *types.ContentBlockMemberToolResult:
-				ret += "(tool result)"
+				ret.WriteString("(tool result)")
 
 			case *types.ContentBlockMemberToolUse:
-				ret += "(tool use)"
+				ret.WriteString("(tool use)")
 
 			case *types.UnknownUnionMember:
 				fmt.Println("unknown tag:", v.Tag)
@@ -109,7 +110,7 @@ func (wrapper InvokeModelWrapper) InvokeConverse(ctx context.Context, prompt str
 
 			}
 		}
-		return ret, nil
+		return ret.String(), nil
 
 	case *types.UnknownUnionMember:
 		return "", fmt.Errorf("unknown tag: %v", v.Tag)

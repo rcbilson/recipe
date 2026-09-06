@@ -9,10 +9,8 @@ type LlmParams struct {
 }
 
 var Llama3_8b = LlmParams{
-	Params: llm.Params{
-		Region:  "ca-central-1",
-		ModelID: "meta.llama3-8b-instruct-v1:0",
-	},
+	Region:  "ca-central-1",
+	ModelID: "meta.llama3-8b-instruct-v1:0",
 	Prompt: `<|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
 The attached html file contains a recipe. Generate a JSON object with the following properties: "title" containing the title of the recipe, "ingredients" containing the ingredients list of the recipe, and "method" containing the steps required to make the recipe. Only output JSON.<|eot_id|><|start_header_id|>assistant<|end_header_id|>`,
@@ -20,10 +18,8 @@ The attached html file contains a recipe. Generate a JSON object with the follow
 }
 
 var Nova_lite = LlmParams{
-	Params: llm.Params{
-		Region:  "us-east-1",
-		ModelID: "us.amazon.nova-lite-v1:0",
-	},
+	Region:  "us-east-1",
+	ModelID: "us.amazon.nova-lite-v1:0",
 	Prompt: `Task:
 The attached html file contains a recipe. Generate a JSON object with the following properties: "title" containing the title of the recipe, "ingredients" containing the ingredients list of the recipe, and "method" containing the steps required to make the recipe.
 
@@ -34,10 +30,8 @@ Response style and format requirements:
 }
 
 var Haiku_4_5 = LlmParams{
-	Params: llm.Params{
-		Region:  "ca-central-1",
-		ModelID: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
-	},
+	Region:  "ca-central-1",
+	ModelID: "global.anthropic.claude-haiku-4-5-20251001-v1:0",
 	Prompt: `Task:
 The attached html file contains a recipe. Generate a JSON object with the following properties: "title" containing the title of the recipe, "ingredients" containing the ingredients list of the recipe, and "method" containing the steps required to make the recipe.
 

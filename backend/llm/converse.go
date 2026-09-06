@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime/types"
@@ -88,17 +89,17 @@ func (llm *Context) Converse(ctx context.Context, cb *ConversationBuilder, stats
 
 	switch v := output.Output.(type) {
 	case *types.ConverseOutputMemberMessage:
-		ret := ""
+		var ret strings.Builder
 		for _, block := range v.Value.Content {
 			switch v := block.(type) {
 			case *types.ContentBlockMemberText:
-				ret += v.Value
+				ret.WriteString(v.Value)
 			default:
 				fmt.Println("union is nil or unknown type")
 
 			}
 		}
-		return ret, nil
+		return ret.String(), nil
 
 	case *types.UnknownUnionMember:
 		return "", fmt.Errorf("unknown tag: %v", v.Tag)
