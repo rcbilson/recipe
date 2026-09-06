@@ -14,10 +14,10 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM node:25-bullseye AS build-frontend
 WORKDIR /src
-COPY frontend/package.json frontend/yarn.lock .
-RUN yarn install --frozen-lockfile
+COPY frontend/package.json frontend/package.lock .
+RUN npm install
 COPY frontend .
-RUN yarn run build
+RUN npm run build
 
 FROM alpine:latest
 RUN apk update && apk add sqlite curl
