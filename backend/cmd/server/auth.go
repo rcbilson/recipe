@@ -9,6 +9,7 @@ import (
 
 type User string
 type AuthHandlerFunc func(http.ResponseWriter, *http.Request, User)
+type AuthAdapterFunc func(AuthHandlerFunc) http.HandlerFunc
 
 func checkCookie(db Repo, r *http.Request) (User, *httpError) {
 	session, err := r.Cookie("session")
@@ -73,6 +74,15 @@ func requireAuth(db Repo) func(AuthHandlerFunc) http.HandlerFunc {
 			}
 
 			logError(w, err.Message, err.Code)
+		}
+	}
+}
+
+func dontRequireAuth(db Repo, user string) func(AuthHandlerFunc) http.HandlerFunc {
+	return func(next AuthHandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			next(w, r, User(user))
+			return
 		}
 	}
 }

@@ -13,6 +13,7 @@ type specification struct {
 	Port         int    `default:"9000"`
 	FrontendPath string `default:"/home/richard/src/recipe/frontend/dist"`
 	DbFile       string `default:"/home/richard/src/recipe/data/recipe.db"`
+	AuthUser string `default:""`
 }
 
 var spec specification
@@ -36,5 +37,10 @@ func main() {
 	}
 	defer db.Close()
 
-	handler(summarizer, db, www.FetcherCombined, spec.Port, spec.FrontendPath)
+	authAdapter := requireAuth(db)
+	if spec.AuthUser != "" {
+		authAdapter = dontRequireAuth(db, spec.AuthUser)
+	}
+
+	handler(summarizer, db, www.FetcherCombined, spec.Port, spec.FrontendPath, authAdapter)
 }
