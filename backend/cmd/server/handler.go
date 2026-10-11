@@ -193,9 +193,13 @@ func summarize(summarizer summarizeFunc, db Repo, fetcher www.FetcherFunc) AuthH
 			logError(w, fmt.Sprintf("JSON decode error: %v", err), http.StatusBadRequest)
 			return
 		}
-		_, err = url.Parse(req.Url)
+		parsedUrl, err := url.Parse(req.Url)
 		if err != nil {
 			logError(w, fmt.Sprintf("Invalid URL: %v", err), http.StatusBadRequest)
+			return
+		}
+		if (parsedUrl.Scheme != "http" && parsedUrl.Scheme != "https") || parsedUrl.Host == "" {
+			logError(w, fmt.Sprintf("Invalid URL: %q is not an absolute http(s) URL", req.Url), http.StatusBadRequest)
 			return
 		}
 		summary, ok := db.Get(ctx, req.Url)

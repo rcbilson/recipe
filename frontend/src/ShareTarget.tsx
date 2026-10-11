@@ -2,6 +2,20 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { RequireAuth } from "@/components/ui/RequireAuth";
 
+// Returns the first http(s) url found in the given text, or null.
+function extractUrl(text: string): string | null {
+  const match = text.match(/https?:\/\/\S+/);
+  if (!match) {
+    return null;
+  }
+  try {
+    new URL(match[0]);
+    return match[0];
+  } catch {
+    return null;
+  }
+}
+
 // Component that processes share data after authentication is confirmed
 function AuthenticatedShareProcessor() {
   const navigate = useNavigate();
@@ -10,9 +24,26 @@ function AuthenticatedShareProcessor() {
     // Process share data from query parameters - this only runs when authenticated
     if (window.location?.search) {
       const params = new URLSearchParams(window.location.search);
-      const url = params.get("text");
-      const title = params.get("title");
-      
+      // Some apps share the url in "text" along with other words (e.g.
+      // "Recipe Title https://..."), so pull the url out of whichever
+      // param contains one.
+      let url: string | null = null;
+      let title = params.get("title");
+      for (const name of ["url", "text", "title"]) {
+        const value = params.get(name);
+        const candidate = value ? extractUrl(value) : null;
+        if (candidate) {
+          url = candidate;
+          if (name === "text" && !title) {
+            const rest = value!.replace(candidate, "").trim();
+            if (rest) {
+              title = rest;
+            }
+          }
+          break;
+        }
+      }
+
       if (url) {
         let target = `/show/${encodeURIComponent(url)}`;
         if (title) {
